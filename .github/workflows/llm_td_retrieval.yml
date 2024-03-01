@@ -1,11 +1,7 @@
 name: Retrieval PyTorch Tests for Target Determination
 
 on:
-  pull_request:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}-${{ github.event_name == 'workflow_dispatch' }}-${{ github.event_name == 'schedule' }}
-  cancel-in-progress: true
+  workflow_call:
 
 permissions:
   id-token: write
@@ -22,6 +18,9 @@ jobs:
           fetch-depth: 0
           path: pytorch
 
+      - name: Setup Linux
+        uses: ./.github/actions/setup-linux
+
       - name: Clone CodeLlama
         uses: actions/checkout@v3
         with:
@@ -33,7 +32,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: clee2000/llm-target-determinator
-          ref: csl/testing
+          ref: main
           path: llm-target-determinator
 
       - name: Setup Conda
@@ -87,26 +86,28 @@ jobs:
           rm indexer-files.zip
 
       - name: Run Retriever
+        id: run_retriever
         shell: bash -l {0}
         run: |
           set -euxo pipefail
           conda activate tdenv
           cd "${GITHUB_WORKSPACE}"/llm-target-determinator
-          OUTPUT_STEM="../pytorch/.additional_ci_files"
           mkdir -p "${OUTPUT_STEM}"
           torchrun \
             --standalone \
             --nnodes=1 \
             --nproc-per-node=1 \
             retriever.py \
-            --experiment-names indexer-files indexer-functions \
-            --pr-items gitdiff changedfiles
+            --experiment-names indexer-functions \
+            --pr-items GITDIFF
+          cd assets/mappings
+          zip -r "${GITHUB_WORKSPACE}"/mappings.zip .
 
-      - name: Upload files
-        shell: bash
-        run: |
-          cd "${GITHUB_WORKSPACE}/pytorch"
-          HEAD_SHA=$(git rev-parse HEAD)
-          cd "${GITHUB_WORKSPACE}/llm-target-determinator/mappings"
-          zip -r "mappings.zip" .
-          aws s3 cp "mappings.zip" "s3://target-determinator-assets/pytorch/mappings/${HEAD_SHA}" --no-progress
+      - name: Upload results to s3
+        uses: seemethere/upload-artifact-s3@v5
+        if: steps.run_retriever.outcome == 'success'
+        with:
+          name: llm_results
+          retention-days: 14
+          if-no-files-found: warn
+          path: llm-target-determinator/assets/mappings/mappings.zip
