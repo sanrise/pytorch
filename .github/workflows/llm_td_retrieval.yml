@@ -19,7 +19,7 @@ jobs:
           path: pytorch
 
       - name: Setup Linux
-        uses: ./.github/actions/setup-linux
+        uses: ./pytorch/.github/actions/setup-linux
 
       - name: Clone CodeLlama
         uses: actions/checkout@v3
