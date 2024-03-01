@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 jobs:
-  retrieve:
+  llm-retrieval:
     runs-on: linux.4xlarge
     steps:
       - name: Clone PyTorch
