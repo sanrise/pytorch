@@ -109,4 +109,4 @@ jobs:
           name: llm_results
           retention-days: 14
           if-no-files-found: warn
-          path: llm-target-determinator/assets/mappings/mappings.zip
+          path: llm-target-determinator/assets/mappings.zip
