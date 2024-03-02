@@ -97,8 +97,8 @@ jobs:
             --nnodes=1 \
             --nproc-per-node=1 \
             retriever.py \
-            --experiment-names indexer-functions \
-            --pr-items GITDIFF
+            --experiment-name indexer-functions \
+            --pr-parse-format GITDIFF
           cd assets
           zip -r "${GITHUB_WORKSPACE}"/mappings.zip mappings
 
