@@ -99,8 +99,8 @@ jobs:
             retriever.py \
             --experiment-names indexer-functions \
             --pr-items GITDIFF
-          cd assets/mappings
-          zip -r "${GITHUB_WORKSPACE}"/mappings.zip .
+          cd assets
+          zip -r "${GITHUB_WORKSPACE}"/mappings.zip mappings
 
       - name: Upload results to s3
         uses: seemethere/upload-artifact-s3@v5
