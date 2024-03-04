@@ -108,7 +108,7 @@ jobs:
           name: llm_results
           retention-days: 14
           if-no-files-found: warn
-          path: llm-target-determinator/assets/mapping.zip
+          path: llm-target-determinator/assets/mappings.zip
         env:
           AWS_ACCESS_KEY_ID: ""
           AWS_SECRET_ACCESS_KEY: ""
