@@ -78,7 +78,12 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
           path: llm-target-determinator/retriever.py
-
+        env:
+          AWS_ACCESS_KEY_ID: ""
+          AWS_SECRET_ACCESS_KEY: ""
+          AWS_SESSION_TOKEN: ""
+          AWS_DEFAULT_REGION: ""
+          AWS_REGION: ""
 
       - name: Fetch CodeLlama Checkpoint
         shell: bash -l {0}
