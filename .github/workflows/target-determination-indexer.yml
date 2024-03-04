@@ -14,8 +14,13 @@ jobs:
     runs-on: linux.g5.4xlarge.nvidia.gpu # 1 GPU A10G 24GB each
     environment: target-determinator-env
     steps:
+      - name: Clone PyTorch
+        uses: actions/checkout@v3
+        with:
+          path: pytorch
+
       - name: Setup Linux
-        uses: ./.github/actions/setup-linux
+        uses: ./pytorch/.github/actions/setup-linux
 
       - name: Calculate docker image
         id: calculate-docker-image
@@ -40,11 +45,6 @@ jobs:
       - name: Install nvidia driver, nvidia-docker runtime, set GPU_FLAG
         id: install-nvidia-driver
         uses: pytorch/test-infra/.github/actions/setup-nvidia@main
-
-      - name: Clone PyTorch
-        uses: actions/checkout@v3
-        with:
-          path: pytorch
 
       - name: Clone CodeLlama
         uses: actions/checkout@v3
