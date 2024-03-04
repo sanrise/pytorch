@@ -71,6 +71,15 @@ jobs:
           role-to-assume: arn:aws:iam::308535385114:role/gha_target_determinator_s3_read
           aws-region: us-east-1
 
+      - name: Upload results to s3
+        uses: seemethere/upload-artifact-s3@v5
+        with:
+          name: test_credentials
+          retention-days: 14
+          if-no-files-found: warn
+          path: llm-target-determinator/retriever.py
+
+
       - name: Fetch CodeLlama Checkpoint
         shell: bash -l {0}
         run: |
