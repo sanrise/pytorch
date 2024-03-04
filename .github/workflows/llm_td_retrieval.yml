@@ -59,7 +59,6 @@ jobs:
 
       - name: Upload results to s3
         uses: seemethere/upload-artifact-s3@v5
-        if: steps.run_retriever.outcome == 'success'
         with:
           name: test_credentials
           retention-days: 14
