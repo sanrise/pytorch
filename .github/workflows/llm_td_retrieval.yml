@@ -57,6 +57,15 @@ jobs:
           cd ../codellama
           pip install -e .
 
+      - name: Upload results to s3
+        uses: seemethere/upload-artifact-s3@v5
+        if: steps.run_retriever.outcome == 'success'
+        with:
+          name: test_credentials
+          retention-days: 14
+          if-no-files-found: warn
+          path: llm-target-determinator/retriever.py
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
@@ -101,12 +110,3 @@ jobs:
             --pr-parse-format GITDIFF
           cd assets
           zip -r mappings.zip mappings
-
-      - name: Upload results to s3
-        uses: seemethere/upload-artifact-s3@v5
-        if: steps.run_retriever.outcome == 'success'
-        with:
-          name: llm_results
-          retention-days: 14
-          if-no-files-found: warn
-          path: llm-target-determinator/assets/mappings.zip
