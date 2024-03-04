@@ -57,33 +57,11 @@ jobs:
           cd ../codellama
           pip install -e .
 
-      - name: Upload results to s3
-        uses: seemethere/upload-artifact-s3@v5
-        with:
-          name: test_credentials
-          retention-days: 14
-          if-no-files-found: warn
-          path: llm-target-determinator/retriever.py
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: arn:aws:iam::308535385114:role/gha_target_determinator_s3_read
           aws-region: us-east-1
-
-      - name: Upload results to s3
-        uses: seemethere/upload-artifact-s3@v5
-        with:
-          name: test_credentials
-          retention-days: 14
-          if-no-files-found: warn
-          path: llm-target-determinator/retriever.py
-        env:
-          AWS_ACCESS_KEY_ID: ""
-          AWS_SECRET_ACCESS_KEY: ""
-          AWS_SESSION_TOKEN: ""
-          AWS_DEFAULT_REGION: ""
-          AWS_REGION: ""
 
       - name: Fetch CodeLlama Checkpoint
         shell: bash -l {0}
@@ -123,3 +101,17 @@ jobs:
             --pr-parse-format GITDIFF
           cd assets
           zip -r mappings.zip mappings
+
+      - name: Upload results to s3
+        uses: seemethere/upload-artifact-s3@v5
+        with:
+          name: llm_results
+          retention-days: 14
+          if-no-files-found: warn
+          path: llm-target-determinator/assets/mapping.zip
+        env:
+          AWS_ACCESS_KEY_ID: ""
+          AWS_SECRET_ACCESS_KEY: ""
+          AWS_SESSION_TOKEN: ""
+          AWS_DEFAULT_REGION: ""
+          AWS_REGION: ""
