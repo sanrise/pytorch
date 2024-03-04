@@ -88,8 +88,8 @@ jobs:
             "${DOCKER_IMAGE}"
           )
 
-          chmod -x .github/scripts/td_llm_indexer.sh
-          docker exec -t "${container_name}" sh -c '.github/scripts/td_llm_indexer.sh'
+          chmod -x pytorch/.github/scripts/td_llm_indexer.sh
+          docker exec -t "${container_name}" sh -c 'pytorch/.github/scripts/td_llm_indexer.sh'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}-${{ github.event_name == 'workflow_dispatch' }}
