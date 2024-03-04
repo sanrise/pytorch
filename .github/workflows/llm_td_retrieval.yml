@@ -100,7 +100,7 @@ jobs:
             --experiment-name indexer-functions \
             --pr-parse-format GITDIFF
           cd assets
-          zip -r "${GITHUB_WORKSPACE}"/mappings.zip mappings
+          zip -r mappings.zip mappings
 
       - name: Upload results to s3
         uses: seemethere/upload-artifact-s3@v5
