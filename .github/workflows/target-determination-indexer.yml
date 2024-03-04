@@ -68,24 +68,15 @@ jobs:
 
       - name: Install Requirements
         shell: bash -l {0}
+        env:
+          DOCKER_IMAGE: ${{ steps.calculate-docker-image.outputs.docker-image }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          AWS_DEFAULT_REGION: us-east-1
         run: |
           # detached container should get cleaned up by teardown_ec2_linux
           container_name=$(docker run \
-            -e BUILD_ENVIRONMENT \
             -e MAX_JOBS="$(nproc --ignore=2)" \
             -e AWS_DEFAULT_REGION \
-            -e PR_NUMBER \
-            -e SHA1 \
-            -e BRANCH \
-            -e SCCACHE_BUCKET \
-            -e SCCACHE_S3_KEY_PREFIX \
-            -e XLA_CUDA \
-            -e XLA_CLANG_CACHE_S3_BUCKET_NAME \
-            -e SKIP_SCCACHE_INITIALIZATION=1 \
-            -e TORCH_CUDA_ARCH_LIST \
-            -e PR_LABELS \
-            -e OUR_GITHUB_JOB_ID \
-            -e HUGGING_FACE_HUB_TOKEN \
             --env-file="/tmp/github_env_${GITHUB_RUN_ID}" \
             --security-opt seccomp=unconfined \
             --cap-add=SYS_PTRACE \
