@@ -35,7 +35,7 @@ class LLM(HeuristicInterface):
         )
 
     def get_mappings(self) -> Dict[str, float]:
-        path = REPO_ROOT / ADDITIONAL_CI_FILES_FOLDER / "llm_results" / "indexer-functions-gitdiff-output.json"
+        path = REPO_ROOT / ADDITIONAL_CI_FILES_FOLDER / "llm_results/mappings/indexer-functions-gitdiff-output.json"
         if not os.path.exists(path):
             print(f"could not find path {path}")
             return {}
