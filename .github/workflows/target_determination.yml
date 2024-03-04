@@ -39,7 +39,7 @@ jobs:
         uses: seemethere/download-artifact-s3@v4
         with:
           name: llm_results
-          path: ${GITHUB_WORKSPACE}/.additional_ci_files/llm_results
+          path: .additional_ci_files/llm_results
 
       - name: Do TD
         id: td
