@@ -151,7 +151,7 @@ def lift_constants_pass(
                 constant_kind = InputKind.CUSTOM_OBJ
                 constant_fqn = constant_attrs.get(constant_val)
                 if constant_fqn is not None:
-                    _, _, constant_name = constant_fqn.rpartition(".")
+                    constant_name = constant_fqn.replace(".", "_")
                 else:
                     constant_name = f"_lifted_custom_obj{num_custom_obj}"
                     constant_fqn = get_constant_fqn(node, constant_name)
@@ -160,7 +160,7 @@ def lift_constants_pass(
                 constant_kind = InputKind.CONSTANT_TENSOR
                 constant_fqn = constant_attrs.get(constant_val)
                 if constant_fqn is not None:
-                    _, _, constant_name = constant_fqn.rpartition(".")
+                    constant_name = constant_fqn.replace(".", "_")
                 else:
                     constant_name = f"_lifted_tensor_constant{num_tensor_constants}"
                     constant_fqn = get_constant_fqn(node, constant_name)
