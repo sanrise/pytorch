@@ -2,14 +2,13 @@
 
 # Download requirements
 set -euxo pipefail
+pip install awscli==1.32.18
 cd llm-target-determinator
 pip install -r requirements.txt
 cd ../codellama
 pip install -e .
 
 # Download checkpoint
-pip install awscli==1.32.18
-cd codellama/
 mkdir "CodeLlama-7b-Python"
 aws s3 cp \
 "s3://target-determinator-assets/CodeLlama-7b-Python" \
