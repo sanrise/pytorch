@@ -26,6 +26,7 @@
 #include <torch/csrc/inductor/aoti_eager/aoti_kernel_holder.h>
 
 #include <iostream>
+#include <memory>
 #include <utility>
 
 namespace py = pybind11;
