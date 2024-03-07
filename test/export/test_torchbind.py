@@ -216,8 +216,7 @@ def forward(self, arg0_1, arg1_1):
 
         m = MyModule()
         input = torch.ones(2, 3)
-        with enable_torchbind_tracing():
-            ep = torch.export.export(m, (input,), strict=False)
+        ep = self._test_export_same_as_eager(m, (input,), strict=False)
 
         unlifted = ep.module()
         self.assertExpectedInline(
@@ -245,9 +244,6 @@ def forward(self, attr, arg0_1):
 
 @skipIfTorchDynamo("torchbind not supported with dynamo yet")
 class TestImplAbstractClass(TestCase):
-    def tearDown(self):
-        torch._library.abstract_impl_class.global_abstract_class_registry.clear()
-
     def test_impl_abstract_class_no_torch_bind_class(self):
         with self.assertRaisesRegex(RuntimeError, "Tried to instantiate class"):
 
@@ -266,9 +262,7 @@ class TestImplAbstractClass(TestCase):
                     pass
 
     def test_impl_abstract_class_from_real_not_classmethod(self):
-        with self.assertRaisesRegex(
-            RuntimeError, "must define a classmethod from_real"
-        ):
+        with self.assertRaisesRegex(RuntimeError, "from_real have to be a classmethod"):
 
             @torch._library.impl_abstract_class("_TorchScriptTesting::_Foo")
             class FakeFoo:
@@ -292,6 +286,9 @@ class TestImplAbstractClass(TestCase):
                 return cls(x, y)
 
         torch._library.impl_abstract_class("_TorchScriptTesting::_Foo", FakeFoo)
+        torch._library.abstract_impl_class.deregister_abstract_impl(
+            "_TorchScriptTesting::_Foo"
+        )
 
     def test_impl_abstract_class_duplicate_registration(self):
         @torch._library.impl_abstract_class("_TorchScriptTesting::_Foo")
@@ -307,6 +304,9 @@ class TestImplAbstractClass(TestCase):
 
         with self.assertRaisesRegex(RuntimeError, "already registered"):
             torch._library.impl_abstract_class("_TorchScriptTesting::_Foo", FakeFoo)
+        torch._library.abstract_impl_class.deregister_abstract_impl(
+            "_TorchScriptTesting::_Foo"
+        )
 
 
 if __name__ == "__main__":
