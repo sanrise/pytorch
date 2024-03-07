@@ -28,7 +28,13 @@ from .codegen.common import (
     KernelTemplate,
     PrimitiveInfoType,
 )
-from .codegen.triton import texpr, TritonKernel, TritonPrinter, TritonScheduling
+from .codegen.triton import (
+    gen_common_triton_imports,
+    texpr,
+    TritonKernel,
+    TritonPrinter,
+    TritonScheduling,
+)
 from .codegen.triton_utils import config_of, signature_to_meta
 from .exc import CUDACompileError
 from .utils import (
@@ -164,7 +170,7 @@ class TritonTemplateKernel(TritonKernel):
             inductor_meta["kernel_num_gb"] = num_gb
         return textwrap.dedent(
             f"""
-            @template(
+            @triton_heuristics.template(
                 num_stages={self.num_stages},
                 num_warps={self.num_warps},
                 triton_meta={triton_meta!r},
@@ -219,21 +225,13 @@ class TritonTemplateKernel(TritonKernel):
         def hook():
             # python_argdefs() cannot be run until after the rest of the template lazily adds more args
             arg_defs, *_ = self.args.python_argdefs()
-            return "\n".join(
-                [
-                    "import triton.language as tl",
-                    "import triton",
-                    "from torch._inductor.triton_heuristics import template",
-                    "from torch._inductor.utils import instance_descriptor",
-                    "from torch._inductor import triton_helpers",
-                    TritonKernel.gen_attr_descriptor_import(),
-                    "",
-                    self.jit_line(),
-                    f"def {self.kernel_name}({', '.join(arg_defs)}):",
-                    self.defines,
-                    renames.getvalue(),
-                ]
-            )
+            code = IndentedBuffer()
+            code.splice(gen_common_triton_imports())
+            code.writeline(self.jit_line())
+            code.writeline(f"def {self.kernel_name}({', '.join(arg_defs)}):")
+            code.splice(self.defines)
+            code.splice(renames.getvalue())
+            return code.getvalue()
 
         assert "<DEF_KERNEL>" not in self.render_hooks
         self.render_hooks["<DEF_KERNEL>"] = hook
