@@ -173,7 +173,7 @@ std::unique_ptr<cub::CachingDeviceAllocator> g_cub_allocator;
 // Ideally, a memory pool should already have the device id information, as
 // long as we are using UVA (as of CUDA 5 and later) so the addresses are
 // unique.
-static std::unordered_map<void*, uint8_t> g_cuda_device_affiliation;
+static std::unordered_map<void*, c10::DeviceIndex> g_cuda_device_affiliation;
 
 // Data structures for optional memory tracking. Access to these structures
 // is guarded by the CUDAContext::mutex.
