@@ -65,6 +65,11 @@ def should_decompose_mm(mat1, mat2) -> bool:
         mat2 = mat2.meta["val"]
     else:
         return False
+    if isinstance(mat1.shape[0], torch.SymInt):
+        return (
+            mat2.shape[0] < MAX_OTHER_DIMENSION_DECOMPOSITION
+            and mat2.shape[1] < MAX_OTHER_DIMENSION_DECOMPOSITION
+        )
     return (
         should_decompose_common(mat1, mat2)
         and len(mat1.shape) == 2
@@ -81,6 +86,11 @@ def should_decompose_mmt(mat1, mat2) -> bool:
         mat2 = mat2.meta["val"]
     else:
         return False
+    if isinstance(mat1.shape[0], torch.SymInt):
+        return (
+            mat1.shape[1] < MAX_OTHER_DIMENSION_DECOMPOSITION
+            and mat2.shape[1] < MAX_OTHER_DIMENSION_DECOMPOSITION
+        )
     return (
         should_decompose_common(mat1, mat2)
         and len(mat1.shape) == 2
@@ -97,6 +107,11 @@ def should_decompose_mm_largek(mat1, mat2) -> bool:
         mat2 = mat2.meta["val"]
     else:
         return False
+    if isinstance(mat1.shape[1], torch.SymInt):
+        return (
+            mat1.shape[0] < MAX_OTHER_DIMENSION_DECOMPOSITION
+            and mat2.shape[1] < MAX_OTHER_DIMENSION_DECOMPOSITION
+        )
     return (
         should_decompose_common(mat1, mat2)
         and len(mat1.shape) == 2
