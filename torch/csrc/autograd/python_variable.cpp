@@ -533,7 +533,25 @@ static std::vector<T> map_py_func(
   std::vector<T> new_items;
   new_items.reserve(items.size());
   for (auto& item : items) {
-    new_items.push_back(py::cast<T>(func(item)));
+    new_items.emplace_back(py::cast<T>(func(item)));
+  }
+  return new_items;
+}
+
+template <>
+std::vector<at::Tensor> map_py_func(
+    const py::function& func,
+    const std::vector<at::Tensor>& items) {
+  std::vector<at::Tensor> new_items;
+  new_items.reserve(items.size());
+  for (auto& item : items) {
+    auto output = func(item);
+    if (output.is(py::none())) {
+      // treat None value as an undefined tensor
+      new_items.emplace_back();
+    } else {
+      new_items.emplace_back(py::cast<at::Tensor>(output));
+    }
   }
   return new_items;
 }
@@ -2245,8 +2263,7 @@ int THPVariableMetaType_init(PyObject* cls, PyObject* args, PyObject* kwargs) {
   return 0;
 }
 
-namespace torch {
-namespace autograd {
+namespace torch::autograd {
 
 // NOLINTNEXTLINE(modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays,cppcoreguidelines-avoid-non-const-global-variables)
 extern PyMethodDef variable_methods[];
@@ -2268,8 +2285,7 @@ void initTensorImplConversion(PyObject* module) {
     return t->getIntrusivePtr().get();
   });
 }
-} // namespace autograd
-} // namespace torch
+} // namespace torch::autograd
 
 bool THPVariable_initModule(PyObject* module) {
   THPVariableMetaType.tp_base = &PyType_Type;
