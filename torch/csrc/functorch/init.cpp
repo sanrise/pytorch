@@ -306,6 +306,10 @@ static bool is_batchedtensor(const Tensor& tensor) {
   return batched != nullptr;
 }
 
+static bool is_legacy_batchedtensor(const Tensor& tensor) {
+  return tensor.unsafeGetTensorImpl()->key_set().has(DispatchKey::Batched);
+}
+
 static bool is_gradtrackingtensor(const Tensor& tensor) {
   auto* wrapped = maybeGetTensorWrapper(tensor);
   return wrapped != nullptr;
@@ -377,6 +381,15 @@ static c10::optional<int64_t> maybe_current_level() {
     return current_level;
   }
   return nullopt;
+}
+
+static int64_t count_jvp_interpreters() {
+  const auto& stack = getDynamicLayerStack();
+  int64_t cnt = 0;
+  for (auto i : stack) {
+    cnt += i.interpreter().key() == TransformType::Jvp ? 1 : 0;
+  }
+  return cnt;
 }
 
 static void tls_set_vmap_excluded(bool excluded) {
@@ -478,6 +491,7 @@ void initFuncTorchBindings(PyObject* module) {
   // various debugging things. Maybe we should offer these as first-class APIs
   // on Tensors?
   m.def("is_batchedtensor", &is_batchedtensor);
+  m.def("is_legacy_batchedtensor", &is_legacy_batchedtensor);
   m.def("is_gradtrackingtensor", &is_gradtrackingtensor);
   m.def("is_functionaltensor", &is_functionaltensor);
   m.def("get_unwrapped", &get_unwrapped);
@@ -489,6 +503,7 @@ void initFuncTorchBindings(PyObject* module) {
   m.def("_set_dynamic_layer_keys_included", &_set_dynamic_layer_keys_included);
   m.def("dump_dls", &dump_dls);
   m.def("dump_local_tls", &dump_local_tls);
+  m.def("count_jvp_interpreters", &count_jvp_interpreters);
   m.def("is_functorch_wrapped_tensor", [](const Tensor& tensor) {
     return maybe_get_level(tensor) != -1;
   });
