@@ -1,36 +1,33 @@
 # Owner(s): ["oncall: export"]
-import unittest
 
 import torch
+import torch.testing._internal.torchbind_impls  # noqa: F401
 from torch._higher_order_ops.torchbind import enable_torchbind_tracing
 from torch.export import export
-from torch.testing._internal.common_utils import (
-    find_library_location,
-    IS_FBCODE,
-    IS_MACOS,
-    IS_SANDCASTLE,
-    IS_WINDOWS,
-    run_tests,
-    skipIfTorchDynamo,
-    TestCase,
-)
+from torch.testing._internal.common_utils import run_tests, skipIfTorchDynamo, TestCase
 
 
 @skipIfTorchDynamo("torchbind not supported with dynamo yet")
 class TestExportTorchbind(TestCase):
     def setUp(self):
-        if IS_MACOS:
-            raise unittest.SkipTest("non-portable load_library call used in test")
-        elif IS_SANDCASTLE or IS_FBCODE:
-            torch.ops.load_library(
-                "//caffe2/test/cpp/jit:test_custom_class_registrations"
-            )
-        elif IS_WINDOWS:
-            lib_file_path = find_library_location("torchbind_test.dll")
-            torch.ops.load_library(str(lib_file_path))
-        else:
-            lib_file_path = find_library_location("libtorchbind_test.so")
-            torch.ops.load_library(str(lib_file_path))
+        @torch._library.impl_abstract_class("_TorchScriptTesting::_Foo")
+        class FakeFoo:
+            def __init__(self, x, y):
+                self.x = x
+                self.y = y
+
+            @classmethod
+            def from_real(cls, foo):
+                (x, y), _ = foo.__getstate__()
+                return cls(x, y)
+
+            def add_tensor(self, z):
+                return (self.x + self.y) * z
+
+    def tearDown(self):
+        torch._library.abstract_impl_class.deregister_abstract_impl(
+            "_TorchScriptTesting::_Foo"
+        )
 
     def _test_export_same_as_eager(self, f, args, kwargs=None, strict=True):
         kwargs = kwargs or {}
@@ -120,6 +117,72 @@ class TestExportTorchbind(TestCase):
 
         unlifted = ep.module()
         self.assertEqual(m(input), unlifted(input))
+
+
+@skipIfTorchDynamo("torchbind not supported with dynamo yet")
+class TestImplAbstractClass(TestCase):
+    def tearDown(self):
+        torch._library.abstract_impl_class.global_abstract_class_registry.clear()
+
+    def test_impl_abstract_class_no_torch_bind_class(self):
+        with self.assertRaisesRegex(RuntimeError, "Tried to instantiate class"):
+
+            @torch._library.impl_abstract_class("_TorchScriptTesting::NOT_A_VALID_NAME")
+            class Invalid:
+                pass
+
+    def test_impl_abstract_class_no_from_real(self):
+        with self.assertRaisesRegex(
+            RuntimeError, "must define a classmethod from_real"
+        ):
+
+            @torch._library.impl_abstract_class("_TorchScriptTesting::_Foo")
+            class InvalidFakeFoo:
+                def __init__(self):
+                    pass
+
+    def test_impl_abstract_class_from_real_not_classmethod(self):
+        with self.assertRaisesRegex(
+            RuntimeError, "must define a classmethod from_real"
+        ):
+
+            @torch._library.impl_abstract_class("_TorchScriptTesting::_Foo")
+            class FakeFoo:
+                def __init__(self, x, y):
+                    self.x = x
+                    self.y = y
+
+                def from_real(self, foo_obj):
+                    x, y = foo_obj.__getstate__()
+                    return FakeFoo(x, y)
+
+    def test_impl_abstract_class_valid(self):
+        class FakeFoo:
+            def __init__(self, x, y):
+                self.x = x
+                self.y = y
+
+            @classmethod
+            def from_real(cls, foo_obj):
+                x, y = foo_obj.__getstate__()
+                return cls(x, y)
+
+        torch._library.impl_abstract_class("_TorchScriptTesting::_Foo", FakeFoo)
+
+    def test_impl_abstract_class_duplicate_registration(self):
+        @torch._library.impl_abstract_class("_TorchScriptTesting::_Foo")
+        class FakeFoo:
+            def __init__(self, x, y):
+                self.x = x
+                self.y = y
+
+            @classmethod
+            def from_real(cls, foo_obj):
+                x, y = foo_obj.__getstate__()
+                return cls(x, y)
+
+        with self.assertRaisesRegex(RuntimeError, "already registered"):
+            torch._library.impl_abstract_class("_TorchScriptTesting::_Foo", FakeFoo)
 
 
 if __name__ == "__main__":
