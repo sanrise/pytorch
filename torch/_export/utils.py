@@ -87,11 +87,9 @@ def _check_input_constraints_for_graph(
                                 f"{existing_dim}, but got {arg_dim}",
                             )
                     else:
-                        if isinstance(arg_dim, torch.SymInt) and isinstance(
-                            node_dim.node.expr, sympy.Symbol
-                        ):
+                        if isinstance(arg_dim, torch.SymInt) and not arg_dim.node.expr.is_number:
                             # this can happen when, say, arg is a fake tensor
-                            unification_map[symbol] = arg_dim
+                            pass
                         else:
                             solution = try_solve(
                                 sympy.Eq(node_dim.node.expr, arg_dim), symbol
